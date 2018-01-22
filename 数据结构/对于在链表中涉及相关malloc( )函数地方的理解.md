@@ -1,4 +1,4 @@
-#### 初学链表结点定义时，不清楚下面这句代码的意思：
+#### 初学链表结点定义时，==不清楚下面这句代码的作用==：
 
 LNode* A = (LNode*)malloc(sizeof(LNode));
 
@@ -20,3 +20,14 @@ p = (int*)malloc(sizeof(int) * 128);
 
 double* pd = (double*)malloc(sizeof(double) * 12);
 //分配12个double型存储单元，并将首地址存储到指针变量pd中。
+
+#### malloc与内存
+##### 1. 堆内存
+假设从《The  C  Programming  Language》中推测正确，从未经动态分配的堆内存呈现上图形式。不连续的堆内存以“链”的形式联系：Heap1 -> Heap2 ->Heap3 ->Heap4->Heap1。将构成“堆链”的每个堆内存（如Heap1）称为“堆块”。malloc()/free()将每个堆块看作由两部分构成：“Header”和“可用堆内存”。在Header中包含了“指向下一个堆内存块的指针”、“本堆块的大小”。这样malloc()/free()就能更好地管理堆。
+![image](http://upload.ouliu.net/i/201801230022339rvf9.jpeg)
+##### 2. 堆内存分配
+根据C中malloc(n)函数动态分配堆的机制：分配堆内存的时候就依序由低到高的地址搜索“堆链”中的堆块，搜索到“可用堆内存”满足n的堆块（如Heap1）为止。若Heap1的“可用堆内存”刚好满足n，则将Heap1从“堆链”中删除，同时重新组织各堆块形成新的“堆链”；若Heap1的“可用堆内存”大小大于n，则将malloc(n)申请到的“Header” + "可用堆内存"部分从Heap1中分裂，将剩余的Heap1堆内存块重新加入“堆链”中。经分裂后的堆内存也包含“Header”和“可用堆内存”两部分（如图Figure 2），然后将由malloc()分配得到的“可用堆内存”返回给用户。若某块堆内存空间比较大（如Heap1），能够满足较小内存的多次申请，那么由malloc(n)多次申请的堆内存块都是连续被分配给用户的（因为有Header，所以用户使用的堆地址不连续）。
+
+为方便free()释放堆空间，经malloc(n)分配给用户的堆空间也隐含一个Header。如下图所示：
+![image](http://upload.ouliu.net/i/20180123003257pzwir.jpeg)
+由于Header的构成的内存对齐，C中malloc(n)函数分配的堆内存会大于等于Header + n。
